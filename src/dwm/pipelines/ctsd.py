@@ -744,8 +744,9 @@ class CrossviewTemporalSD():
     def __init__(
         self, output_path, config: dict, device, common_config: dict,
         training_config: dict, inference_config: dict,
-        pretrained_model_name_or_path: str, model, model_checkpoint_path=None,
-        model_load_state_args: dict = {}, metrics: dict = {}, resume_from=None
+        pretrained_model_name_or_path: str, model, model_dtype=None,
+        model_checkpoint_path=None, model_load_state_args: dict = {},
+        metrics: dict = {}, resume_from=None
     ):
         self.should_save = not torch.distributed.is_initialized() or \
             torch.distributed.get_rank() == 0
@@ -762,7 +763,8 @@ class CrossviewTemporalSD():
             self.generator.seed()
 
         # load the diffusion model
-        self.model_wrapper = self.model = model
+        self.model_dtype = model_dtype or torch.float32
+        self.model_wrapper = self.model = model.to(dtype=self.model_dtype)
         self.model.enable_gradient_checkpointing()
         distribution_framework = self.common_config.get(
             "distribution_framework", "ddp")
@@ -804,7 +806,9 @@ class CrossviewTemporalSD():
                 .from_pretrained(
                     pretrained_model_name_or_path, subfolder="text_encoder",
                     **text_encoder_load_args)
-            text_encoder.to(device)
+            if text_encoder.device.type != device.type:
+                text_encoder.to(device)
+
             text_encoder.requires_grad_(False)
             text_encoder.eval()
 
@@ -812,7 +816,9 @@ class CrossviewTemporalSD():
                 .from_pretrained(
                     pretrained_model_name_or_path, subfolder="text_encoder_2",
                     **text_encoder_load_args)
-            text_encoder_2.to(device)
+            if text_encoder_2.device.type != device.type:
+                text_encoder_2.to(device)
+
             text_encoder_2.requires_grad_(False)
             text_encoder_2.eval()
 
@@ -820,7 +826,12 @@ class CrossviewTemporalSD():
             text_encoder_3 = transformers.T5EncoderModel.from_pretrained(
                 pretrained_model_name_or_path, subfolder="text_encoder_3",
                 **text_encoder_load_args)
-            text_encoder_3.to(dtype=torch.float16)  # fix FSDP error
+            if (
+                torch.distributed.is_initialized() and
+                distribution_framework == "fsdp"
+            ):
+                text_encoder_3.to(dtype=torch.float16)
+
             text_encoder_3.requires_grad_(False)
             text_encoder_3.eval()
             if (
@@ -831,7 +842,7 @@ class CrossviewTemporalSD():
                 text_encoder_3 = FSDP(
                     text_encoder_3, device_id=torch.cuda.current_device(),
                     **self.common_config["t5_fsdp_wrapper_settings"])
-            else:
+            elif text_encoder_3.device.type != device.type:
                 text_encoder_3.to(device)
 
             self.text_encoders = [text_encoder, text_encoder_2, text_encoder_3]
@@ -1170,7 +1181,7 @@ class CrossviewTemporalSD():
                 if isinstance(self.model, diffusers.SD3Transformer2DModel)
                 else self.tokenizer,
                 self.common_config, batch["vae_images"].shape, batch,
-                self.device, torch.float32, text_condition_mask,
+                self.device, self.model_dtype, text_condition_mask,
                 _3dbox_condition_mask, hdmap_condition_mask,
                 explicit_view_modeling_mask)
 
@@ -1311,7 +1322,7 @@ class CrossviewTemporalSD():
             if isinstance(self.model, diffusers.SD3Transformer2DModel)
             else self.tokenizer,
             self.common_config, latent_shape, batch, self.device,
-            torch.float32,
+            self.model_dtype,
             do_classifier_free_guidance=do_classifier_free_guidance)
         result = {}
         stop_timestep = (
@@ -1351,12 +1362,13 @@ class CrossviewTemporalSD():
                     timesteps[:, reference_frame_count:]
                 ], 1)
 
+            latent_model_input = latent_model_input.to(dtype=self.model_dtype)
             if hasattr(self.test_scheduler, "scale_model_input"):
                 latent_model_input = self.test_scheduler\
                     .scale_model_input(
                         latent_model_input,
                         timesteps if progressive_mode else t)\
-                    .to(dtype=torch.float32)
+                    .to(dtype=self.model_dtype)
 
             if do_classifier_free_guidance:
                 latent_model_input = torch.cat(
@@ -1365,8 +1377,9 @@ class CrossviewTemporalSD():
             else:
                 timesteps_input = timesteps
 
-            model_output, _, _ = self.model_wrapper(
-                latent_model_input, timesteps_input, **model_conditions)
+            with self.get_autocast_context():
+                model_output, _, _ = self.model_wrapper(
+                    latent_model_input, timesteps_input, **model_conditions)
 
             # update the noisy latent
             noise_pred = model_output[0]
