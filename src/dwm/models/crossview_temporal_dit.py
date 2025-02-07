@@ -423,6 +423,7 @@ class DiTCrossviewTemporalConditionModel(diffusers.SD3Transformer2DModel):
                 view_emb.view(batch_size * sequence_length * view_count, -1))\
                 .unsqueeze(1)
         elif self.perspective_modeling_type == "explicit":
+            camera_intrinsics_norm = camera_intrinsics_norm.clone()
             camera_intrinsics_norm[..., 0, 0] = \
                 camera_intrinsics_norm[..., 0, 0] * width
             camera_intrinsics_norm[..., 1, 1] = \

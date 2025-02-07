@@ -10,7 +10,7 @@
             "_class_name": "dwm.fs.czip.CombinedZipFileSystem",
             "fs": {
                 "_class_name": "dwm.fs.dirfs.DirFileSystem",
-                "path": "/cache/aoss-v2.st-sh-01.sensecoreapi-oss.cn/users/wuzehuan"
+                "path": "/cache/aoss.cn-sh-01.sensecoreapi-oss.cn/users/wuzehuan"
             },
             "paths": [
                 "data/opendv/opendv-youtube-10hz-720_0.zip",
@@ -23,7 +23,7 @@
             "_class_name": "torch.distributed.device_mesh.init_device_mesh",
             "device_type": "cuda",
             "mesh_shape": [
-                4,
+                2,
                 8
             ]
         }
@@ -36,7 +36,6 @@
         "_class_name": "dwm.pipelines.ctsd.CrossviewTemporalSD",
         "common_config": {
             "frame_prediction_style": "ctsd",
-            "reference_frame_count": 3,
             "cat_condition": true,
             "cond_with_action": false,
             "condition_on_all_frames": true,
@@ -101,9 +100,8 @@
             "memory_efficient_batch": 12
         },
         "training_config": {
+            "freezing_pattern": "^(transformer_blocks|time_text_embed|context_embedder|pos_embed|norm_out|proj_out)$",
             "text_prompt_condition_ratio": 0.8,
-            "3dbox_condition_ratio": 0,
-            "hdmap_condition_ratio": 0,
             "explicit_view_modeling_ratio": 0.8,
             "reference_frame_count": 3,
             "generation_task_ratio": 0.2,
@@ -111,8 +109,7 @@
             "all_reference_visible_ratio": 0.8,
             "reference_visible_rate": 0.5,
             "disable_reference_frame_loss": true,
-            "enable_grad_scaler": true,
-            "freezing_pattern": "^(transformer_blocks|time_text_embed|context_embedder|pos_embed|norm_out|proj_out)"
+            "enable_grad_scaler": true
         },
         "inference_config": {
             "guidance_scale": 3,
@@ -121,7 +118,8 @@
                 448,
                 252
             ],
-            "sequence_length_per_iteration": 6,
+            "generate_frames_for_reference": false,
+            "sequence_length_per_iteration": 19,
             "reference_frame_count": 3,
             "autoregression_data_exception_for_take_sequence": [
                 "crossview_mask"
@@ -167,8 +165,8 @@
             "mixer_type": "AlphaBlender",
             "merge_factor": 2
         },
-        "pretrained_model_name_or_path": "/cache/aoss-v2.st-sh-01.sensecoreapi-oss.cn/users/wuzehuan/models/stable-diffusion-3-medium-diffusers",
-        "model_checkpoint_path": "/cache/aoss-v2.st-sh-01.sensecoreapi-oss.cn/users/wuzehuan/models/stable-diffusion-3-medium-diffusers/transformer/diffusion_pytorch_model.safetensors",
+        "pretrained_model_name_or_path": "/cache/aoss.cn-sh-01.sensecoreapi-oss.cn/users/wuzehuan/models/stable-diffusion-3-medium-diffusers",
+        "model_checkpoint_path": "/cache/aoss.cn-sh-01.sensecoreapi-oss.cn/users/wuzehuan/models/stable-diffusion-3-medium-diffusers/transformer/diffusion_pytorch_model.safetensors",
         "model_load_state_args": {
             "strict": false
         },
@@ -179,7 +177,7 @@
             },
             "fvd": {
                 "_class_name": "dwm.metrics.fvd.FrechetVideoDistance",
-                "inception_3d_checkpoint_path": "/mnt/storage/user/wuzehuan/Downloads/models/inception_3d/i3d_pretrained_400.pt",
+                "inception_3d_checkpoint_path": "/mnt/afs/user/wuzehuan/Documents/DWM/externals/TATS/tats/fvd/i3d_pretrained_400.pt",
                 "sequence_count": 16
             }
         }
@@ -192,8 +190,8 @@
                 "_class_name": "dwm.common.get_state",
                 "key": "opendv_fs"
             },
-            "meta_path": "/cache/aoss-v2.st-sh-01.sensecoreapi-oss.cn/users/nijingcheng/datasets/OpenDV-YouTube.json",
-            "sequence_length": 6,
+            "meta_path": "/cache/aoss.cn-sh-01.sensecoreapi-oss.cn/users/nijingcheng/datasets/OpenDV-YouTube.json",
+            "sequence_length": 19,
             "fps_stride_tuples": [
                 [
                     10,
@@ -207,8 +205,8 @@
             ],
             "enable_fake_camera_transforms": true,
             "image_description_settings": {
-                "path": "/cache/aoss-v2.st-sh-01.sensecoreapi-oss.cn/users/wuzehuan/workspaces/worldmodels/data/opendv_caption.json",
-                "candidates_times_path": "/cache/aoss-v2.st-sh-01.sensecoreapi-oss.cn/users/wuzehuan/workspaces/worldmodels/data/opendv_candidates_times.json",
+                "path": "/cache/aoss.cn-sh-01.sensecoreapi-oss.cn/users/wuzehuan/workspaces/worldmodels/data/opendv_caption.json",
+                "candidates_times_path": "/cache/aoss.cn-sh-01.sensecoreapi-oss.cn/users/wuzehuan/workspaces/worldmodels/data/opendv_candidates_times.json",
                 "seed": 5,
                 "reorder_keys": true,
                 "drop_rates": {
@@ -280,20 +278,20 @@
                 "_class_name": "dwm.common.get_state",
                 "key": "opendv_fs"
             },
-            "meta_path": "/cache/aoss-v2.st-sh-01.sensecoreapi-oss.cn/users/nijingcheng/datasets/OpenDV-YouTube.json",
-            "sequence_length": 18,
+            "meta_path": "/cache/aoss.cn-sh-01.sensecoreapi-oss.cn/users/nijingcheng/datasets/OpenDV-YouTube.json",
+            "sequence_length": 19,
             "fps_stride_tuples": [
                 [
                     10,
-                    180
+                    60
                 ]
             ],
             "split": "Val",
             "mini_batch": 6,
             "enable_fake_camera_transforms": true,
             "image_description_settings": {
-                "path": "/cache/aoss-v2.st-sh-01.sensecoreapi-oss.cn/users/wuzehuan/workspaces/worldmodels/data/opendv_caption.json",
-                "candidates_times_path": "/cache/aoss-v2.st-sh-01.sensecoreapi-oss.cn/users/wuzehuan/workspaces/worldmodels/data/opendv_candidates_times.json"
+                "path": "/cache/aoss.cn-sh-01.sensecoreapi-oss.cn/users/wuzehuan/workspaces/worldmodels/data/opendv_caption.json",
+                "candidates_times_path": "/cache/aoss.cn-sh-01.sensecoreapi-oss.cn/users/wuzehuan/workspaces/worldmodels/data/opendv_candidates_times.json"
             },
             "stub_key_data_dict": {
                 "crossview_mask": [
@@ -351,7 +349,7 @@
         ]
     },
     "training_dataloader": {
-        "batch_size": 1,
+        "batch_size": 2,
         "num_workers": 3,
         "prefetch_factor": 3,
         "collate_fn": {
@@ -389,9 +387,9 @@
         "persistent_workers": true
     },
     "informations": {
-        "fid": -1,
-        "fvd": -1,
+        "fid": 9.10,
+        "fvd": 132.89,
         "total_batch_sizes": 32,
-        "steps": 60000
+        "steps": 30000
     }
 }
