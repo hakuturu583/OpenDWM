@@ -1,10 +1,8 @@
 # Open Driving World Models (OpenDWM)
 
-[[中文简介](README_intro_zh.md)]
+[![Youtube](https://badges.aleen42.com/src/youtube.svg)](https://youtu.be/j9RRj-xzOA4) [<img src=https://img.shields.io/badge/%E4%B8%AD%E6%96%87%E7%AE%80%E4%BB%8B-blue>](README_intro_zh.md) 
 
 https://github.com/user-attachments/assets/649d3b81-3b1f-44f9-9f51-4d1ed7756476
-
-[Video link](https://youtu.be/j9RRj-xzOA4)
 
 Welcome to the OpenDWM project! This is an open-source initiative, focusing on autonomous driving video generation. Our mission is to provide a high-quality, controllable tool for generating autonomous driving videos using the latest technology. We aim to build a codebase that is both user-friendly and highly reusable, and hope to continuously improve the project through the collective wisdom of the community.
 
@@ -49,6 +47,7 @@ python -m pip install torch==2.5.1 torchvision==0.20.1
 ```
 
 Clone the repository, then install the dependencies.
+
 ```
 cd DWM
 git submodule update --init --recursive
@@ -62,8 +61,8 @@ Our cross-view temporal SD (CTSD) pipeline support loading the pretrained SD 2.1
 | Base model | Text conditioned <br/> driving generation | Text and layout (box, map) <br/> conditioned driving generation |
 | :-: | :-: | :-: |
 | [SD 2.1](https://huggingface.co/stabilityai/stable-diffusion-2-1) | [Config](configs/ctsd/multi_datasets/ctsd_21_tirda_nwao.json), [Download](http://103.237.29.236:10030/ctsd_21_tirda_nwao_30k.pth) | [Config](configs/ctsd/multi_datasets/ctsd_21_tirda_bm_nwa.json), [Download](http://103.237.29.236:10030/ctsd_21_tirda_bm_nwa_30k.pth) |
-| [SD 3.0](https://huggingface.co/stabilityai/stable-diffusion-3-medium-diffusers) | | [UniMLVG Config](configs/ctsd/unimlvg/unimlvg_stage3_tirda_nwa.json), [Download](http://103.237.29.236:10030/ctsd_unimlvg_tirda_bm_nwa_60k.pth) |
-| [SD 3.5](https://huggingface.co/stabilityai/stable-diffusion-3.5-medium) | [Config](configs/ctsd/multi_datasets/ctsd_35_tirda_nwao.json), [Download](http://103.237.29.236:10030/ctsd_35_tirda_nwao_20k.pth) | [Config](configs/ctsd/multi_datasets/ctsd_35_tirda_bm_nwa.json), Released by 2025-3-1 |
+| [SD 3.0](https://huggingface.co/stabilityai/stable-diffusion-3-medium-diffusers) | | [UniMLVG Config](configs/ctsd/unimlvg/ctsd_unimlvg_stage3_tirda_bm_nwa.json), [Download](http://103.237.29.236:10030/ctsd_unimlvg_tirda_bm_nwa_60k.pth) |
+| [SD 3.5](https://huggingface.co/stabilityai/stable-diffusion-3.5-medium) | [Config](configs/ctsd/multi_datasets/ctsd_35_tirda_nwao.json), [Download](http://103.237.29.236:10030/ctsd_35_tirda_nwao_20k.pth) | [Config](configs/ctsd/multi_datasets/ctsd_35_tirda_bm_nwao.json), [Download](http://103.237.29.236:10030/ctsd_35_tirda_bm_nwao_40k.pth) |
 
 ## Examples
 
@@ -71,18 +70,18 @@ Our cross-view temporal SD (CTSD) pipeline support loading the pretrained SD 2.1
 
 Download base model (for VAE, text encoders, scheduler config) and driving generation model checkpoint, and edit the [path](examples/ctsd_35_6views_image_generation.json#L102) and [prompts](examples/ctsd_35_6views_image_generation.json#L221) in the JSON config, then run this command.
 
-```
+```bash
 PYTHONPATH=src python examples/ctsd_generation_example.py -c examples/ctsd_35_6views_image_generation.json -o output/ctsd_35_6views_image_generation
 ```
 
 ### Layout conditioned T2V generation with CTSD pipeline
 
-1. Download base model (for VAE, text encoders, scheduler config) and driving generation model checkpoint, and edit the [path](examples/ctsd_21_6views_video_generation_with_layout.json#L119) in the JSON config.
-2. Download layout resource package [nuscenes_scene-0627_package.zip](http://103.237.29.236:10030/nuscenes_scene-0627_package.zip) and unzip to the `{RESOURCE_PATH}`. Then edit the meta [path](examples/ctsd_21_6views_video_generation_with_layout.json#L129) as `{RESOURCE_PATH}/data.json` in the JSON config.
+1. Download base model (for VAE, text encoders, scheduler config) and driving generation model checkpoint, and edit the [path](examples/ctsd_35_6views_video_generation_with_layout.json#L156) in the JSON config.
+2. Download layout resource package ([nuscenes_scene-0627_package.zip](http://103.237.29.236:10030/nuscenes_scene-0627_package.zip), or [carla_town04_package](http://103.237.29.236:10030/carla_town04_package.zip)) and unzip to the `{RESOURCE_PATH}`. Then edit the meta [path](examples/ctsd_35_6views_video_generation_with_layout.json#L162) as `{RESOURCE_PATH}/data.json` in the JSON config.
 3. Run this command to generate the video.
 
-```
-PYTHONPATH=src python src/dwm/preview.py -c examples/ctsd_unimlvg_6views_video_generation.json -o output/ctsd_unimlvg_6views_video_generation
+```bash
+PYTHONPATH=src python src/dwm/preview.py -c examples/ctsd_35_6views_video_generation_with_layout.json -o output/ctsd_35_6views_video_generation_with_layout
 ```
 
 ## Train

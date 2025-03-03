@@ -51,9 +51,6 @@ class DatasetAdapter(torch.utils.data.Dataset):
         else:
             return transform(a)
 
-    def apply_temporal_transform(transform, a):
-        return transform(a)
-
     def __init__(
         self, base_dataset: torch.utils.data.Dataset, transform_list: list,
         pop_list=None
@@ -70,9 +67,8 @@ class DatasetAdapter(torch.utils.data.Dataset):
         if isinstance(index, int):
             item = self.base_dataset[index]
             for i in self.transform_list:
-                if getattr(i["transform"], 'is_temporal_transform', False):
-                    item[i["new_key"]] = DatasetAdapter.apply_temporal_transform(
-                        i["transform"], item[i["old_key"]])
+                if i.get("is_dynamic_transform", False):
+                    item = i["transform"](item)
                 else:
                     item[i["new_key"]] = DatasetAdapter.apply_transform(
                         i["transform"], item[i["old_key"]],
@@ -313,7 +309,6 @@ def make_image_description_string(caption_dict: dict, settings: dict):
                 probabilities of the corresponding key elements in the
                 caption_dict being dropped.
     """
-
     default_image_description_keys = [
         "time", "weather", "environment", "objects", "image_description"
     ]

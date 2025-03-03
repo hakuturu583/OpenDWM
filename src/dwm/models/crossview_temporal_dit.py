@@ -350,13 +350,13 @@ class DiTCrossviewTemporalConditionModel(diffusers.SD3Transformer2DModel):
                 b=batch_size, v=view_count, w=width)
         else:
             temporal_hidden_states = einops.rearrange(
-                temporal_hidden_states, "(b t v) hw c -> (bv hw) t c",
+                temporal_hidden_states, "(b t v) hw c -> (b v hw) t c",
                 b=batch_size, t=sequence_length)
             temporal_hidden_states = temporal_block(
                 temporal_hidden_states)
             temporal_hidden_states = einops.rearrange(
-                temporal_hidden_states, "(bv hw) t c -> (b t v) hw c",
-                b=batch_size, t=sequence_length)
+                temporal_hidden_states, "(b v hw) t c -> (b t v) hw c",
+                b=batch_size, v=view_count, t=sequence_length)
 
         return mixer(
             hidden_states.view(
