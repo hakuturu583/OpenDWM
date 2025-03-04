@@ -138,7 +138,7 @@ class ForkableS3FileSystem(fsspec.AbstractFileSystem):
     def ls(self, path, detail=True, **kwargs):
         self.reinit_if_forked()
         bucket, key = S3File.find_bucket_key(path)
-        if not key.endswith("/"):
+        if len(key) > 0 and not key.endswith("/"):
             key = key + "/"
 
         # NOTE: only files are listed
@@ -151,7 +151,7 @@ class ForkableS3FileSystem(fsspec.AbstractFileSystem):
             else:
                 response = self.client.list_objects(
                     Bucket=bucket, Delimiter="/", Prefix=key,
-                    ContinuationToken=continuation_token)
+                    Marker=continuation_token)
 
             if "Contents" in response:
                 for i in response["Contents"]:
@@ -165,7 +165,7 @@ class ForkableS3FileSystem(fsspec.AbstractFileSystem):
                     })
 
             if response["IsTruncated"]:
-                continuation_token = response["NextContinuationToken"]
+                continuation_token = response["NextMarker"]
             else:
                 break
 

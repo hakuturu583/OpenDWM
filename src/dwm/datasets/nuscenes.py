@@ -732,7 +732,7 @@ class MotionDataset(torch.utils.data.Dataset):
             MotionDataset.default_bev_from_ego_transform)
         color_table = hdmap_bev_settings.get(
             "color_table", MotionDataset.default_hdmap_color_table)
-
+        fill_map = hdmap_bev_settings.get("fill_map", True)
         # get the transform from the world (map) space to the BEV space
         world_from_ego = dwm.datasets.common.get_transform(
             sample_data["rotation"], sample_data["translation"])
@@ -759,14 +759,14 @@ class MotionDataset(torch.utils.data.Dataset):
                 for polygon_token in i["polygon_tokens"]:
                     MotionDataset.draw_polygon_to_bev_image(
                         polygons[polygon_token], nodes, draw, bev_from_world,
-                        (0, 0, 255), pen_width, solid=True)
+                        (0, 0, 255), pen_width, solid=fill_map)
 
         if "ped_crossing" in color_table and "ped_crossing" in map:
             pen_color = tuple(color_table["ped_crossing"])
             for i in map["ped_crossing"]:
                 MotionDataset.draw_polygon_to_bev_image(
                     polygons[i["polygon_token"]], nodes, draw, bev_from_world,
-                    (255, 0, 0), pen_width, solid=True)
+                    (255, 0, 0), pen_width, solid=fill_map)
 
         if "lane" in color_table and "lane" in map:
             pen_color = tuple(color_table["lane"])

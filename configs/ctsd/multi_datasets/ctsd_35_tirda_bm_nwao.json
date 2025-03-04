@@ -1,8 +1,8 @@
 {
     "device": "cuda",
     "ddp_backend": "nccl",
-    "train_epochs": 1,
-    "generator_seed": 0,
+    "train_epochs": 4,
+    "generator_seed": 1,
     "data_shuffle": true,
     "fix_training_data_order": true,
     "global_state": {
@@ -27,6 +27,19 @@
                 "data/nuscenes/nuScenes-map-expansion-v1.3.zip"
             ]
         },
+        "opendv_czip_fs": {
+            "_class_name": "dwm.fs.czip.CombinedZipFileSystem",
+            "fs": {
+                "_class_name": "dwm.fs.dirfs.DirFileSystem",
+                "path": "/cache/aoss.cn-sh-01.sensecoreapi-oss.cn/users/wuzehuan/data/opendv"
+            },
+            "paths": [
+                "opendv-youtube-10hz-720_0.zip",
+                "opendv-youtube-10hz-720_1.zip",
+                "opendv-youtube-10hz-720_2.zip",
+                "opendv-youtube-10hz-720_3.zip"
+            ]
+        },
         "device_mesh": {
             "_class_name": "torch.distributed.device_mesh.init_device_mesh",
             "device_type": "cuda",
@@ -38,7 +51,11 @@
     },
     "optimizer": {
         "_class_name": "torch.optim.AdamW",
-        "lr": 1.2e-4
+        "lr": 6e-5,
+        "betas": [
+            0.9,
+            0.975
+        ]
     },
     "pipeline": {
         "_class_name": "dwm.pipelines.ctsd.CrossviewTemporalSD",
@@ -47,6 +64,7 @@
             "cat_condition": true,
             "cond_with_action": false,
             "condition_on_all_frames": true,
+            "uncondition_image_color": 0.1255,
             "added_time_ids": "fps_camera_transforms",
             "camera_intrinsic_embedding_indices": [
                 0,
@@ -97,8 +115,7 @@
                         "_class_name": "get_class",
                         "class_name": "torch.float16"
                     }
-                },
-                "use_orig_params": true
+                }
             },
             "t5_fsdp_wrapper_settings": {
                 "sharding_strategy": {
@@ -126,19 +143,22 @@
                     "class_name": "torch.float16"
                 }
             },
-            "memory_efficient_batch": 16
+            "memory_efficient_batch": 12
         },
         "training_config": {
-            "freezing_pattern": "^(transformer_blocks|time_text_embed)$",
             "text_prompt_condition_ratio": 0.8,
             "3dbox_condition_ratio": 0.8,
             "hdmap_condition_ratio": 0.8,
-            "reference_frame_count": 3,
+            "reference_frame_count": {
+                "1": 0.1,
+                "2": 0.3,
+                "3": 0.6
+            },
             "generation_task_ratio": 0.25,
             "image_generation_ratio": 0.3,
             "all_reference_visible_ratio": 1,
-            "reference_frame_scale_std": 0.02,
-            "reference_frame_offset_std": 0.02,
+            "reference_frame_scale_std": 0.01,
+            "reference_frame_offset_std": 0.01,
             "enable_grad_scaler": true
         },
         "inference_config": {
@@ -153,7 +173,7 @@
             "autoregression_data_exception_for_take_sequence": [
                 "crossview_mask"
             ],
-            "evaluation_item_count": 480
+            "evaluation_item_count": 640
         },
         "model": {
             "_class_name": "dwm.models.crossview_temporal_dit.DiTCrossviewTemporalConditionModel",
@@ -199,7 +219,7 @@
             ],
             "crossview_gradient_checkpointing": true,
             "enable_temporal": true,
-            "temporal_attention_type": "rowwise",
+            "temporal_attention_type": "pointwise",
             "temporal_block_layers": [
                 2,
                 3,
@@ -456,6 +476,95 @@
                             }
                         ]
                     }
+                },
+                {
+                    "_class_name": "dwm.datasets.opendv.MotionDataset",
+                    "fs": {
+                        "_class_name": "dwm.common.get_state",
+                        "key": "opendv_czip_fs"
+                    },
+                    "meta_path": "/cache/aoss.cn-sh-01.sensecoreapi-oss.cn/users/nijingcheng/datasets/OpenDV-YouTube.json",
+                    "sequence_length": 19,
+                    "fps_stride_tuples": [
+                        [
+                            10,
+                            5
+                        ]
+                    ],
+                    "split": "Train",
+                    "mini_batch": 6,
+                    "ignore_list": [
+                        "izhGt1GnGFk"
+                    ],
+                    "enable_pts": false,
+                    "enable_fake_camera_transforms": true,
+                    "enable_fake_3dbox_images": true,
+                    "enable_fake_hdmap_images": true,
+                    "fake_condition_image_color": [
+                        32,
+                        32,
+                        32
+                    ],
+                    "image_description_settings": {
+                        "path": "/cache/aoss.cn-sh-01.sensecoreapi-oss.cn/users/wuzehuan/workspaces/worldmodels/data/opendv_caption.json",
+                        "candidates_times_path": "/cache/aoss.cn-sh-01.sensecoreapi-oss.cn/users/wuzehuan/workspaces/worldmodels/data/opendv_candidates_times.json",
+                        "seed": 5,
+                        "reorder_keys": true,
+                        "drop_rates": {
+                            "environment": 0.04,
+                            "objects": 0.08,
+                            "image_description": 0.16
+                        }
+                    },
+                    "stub_key_data_dict": {
+                        "pts": [
+                            "content",
+                            {
+                                "_class_name": "torch.zeros",
+                                "size": [
+                                    19,
+                                    7
+                                ]
+                            }
+                        ],
+                        "crossview_mask": [
+                            "content",
+                            {
+                                "_class_name": "torch.eye",
+                                "n": 6,
+                                "dtype": {
+                                    "_class_name": "get_class",
+                                    "class_name": "torch.bool"
+                                }
+                            }
+                        ],
+                        "ego_transforms": [
+                            "content",
+                            {
+                                "_class_name": "torch.repeat_interleave",
+                                "input": {
+                                    "_class_name": "torch.repeat_interleave",
+                                    "input": {
+                                        "_class_name": "torch.reshape",
+                                        "input": {
+                                            "_class_name": "torch.eye",
+                                            "n": 4
+                                        },
+                                        "shape": [
+                                            1,
+                                            1,
+                                            4,
+                                            4
+                                        ]
+                                    },
+                                    "repeats": 7,
+                                    "dim": 1
+                                },
+                                "repeats": 19,
+                                "dim": 0
+                            }
+                        ]
+                    }
                 }
             ]
         },
@@ -529,6 +638,7 @@
         "pop_list": [
             "images",
             "lidar_points",
+            "lidar_transforms",
             "image_description"
         ]
     },
@@ -703,6 +813,85 @@
                             }
                         ]
                     }
+                },
+                {
+                    "_class_name": "dwm.datasets.opendv.MotionDataset",
+                    "fs": {
+                        "_class_name": "dwm.common.get_state",
+                        "key": "opendv_czip_fs"
+                    },
+                    "meta_path": "/cache/aoss.cn-sh-01.sensecoreapi-oss.cn/users/nijingcheng/datasets/OpenDV-YouTube.json",
+                    "sequence_length": 35,
+                    "fps_stride_tuples": [
+                        [
+                            10,
+                            75
+                        ]
+                    ],
+                    "split": "Val",
+                    "mini_batch": 6,
+                    "enable_pts": false,
+                    "enable_fake_camera_transforms": true,
+                    "enable_fake_3dbox_images": true,
+                    "enable_fake_hdmap_images": true,
+                    "fake_condition_image_color": [
+                        32,
+                        32,
+                        32
+                    ],
+                    "image_description_settings": {
+                        "path": "/cache/aoss.cn-sh-01.sensecoreapi-oss.cn/users/wuzehuan/workspaces/worldmodels/data/opendv_caption.json",
+                        "candidates_times_path": "/cache/aoss.cn-sh-01.sensecoreapi-oss.cn/users/wuzehuan/workspaces/worldmodels/data/opendv_candidates_times.json"
+                    },
+                    "stub_key_data_dict": {
+                        "pts": [
+                            "content",
+                            {
+                                "_class_name": "torch.zeros",
+                                "size": [
+                                    35,
+                                    7
+                                ]
+                            }
+                        ],
+                        "crossview_mask": [
+                            "content",
+                            {
+                                "_class_name": "torch.eye",
+                                "n": 6,
+                                "dtype": {
+                                    "_class_name": "get_class",
+                                    "class_name": "torch.bool"
+                                }
+                            }
+                        ],
+                        "ego_transforms": [
+                            "content",
+                            {
+                                "_class_name": "torch.repeat_interleave",
+                                "input": {
+                                    "_class_name": "torch.repeat_interleave",
+                                    "input": {
+                                        "_class_name": "torch.reshape",
+                                        "input": {
+                                            "_class_name": "torch.eye",
+                                            "n": 4
+                                        },
+                                        "shape": [
+                                            1,
+                                            1,
+                                            4,
+                                            4
+                                        ]
+                                    },
+                                    "repeats": 7,
+                                    "dim": 1
+                                },
+                                "repeats": 35,
+                                "dim": 0
+                            }
+                        ]
+                    }
                 }
             ]
         },
@@ -776,11 +965,43 @@
         "pop_list": [
             "images",
             "lidar_points",
+            "lidar_transforms",
             "image_description"
         ]
     },
+    "mix_config": {
+        "256-448": [
+            0.6,
+            [
+                [
+                    19,
+                    2,
+                    1.0
+                ]
+            ]
+        ],
+        "176-304": [
+            0.3,
+            [
+                [
+                    19,
+                    4,
+                    1.0
+                ]
+            ]
+        ],
+        "144-256": [
+            0.1,
+            [
+                [
+                    19,
+                    6,
+                    1.0
+                ]
+            ]
+        ]
+    },
     "training_dataloader": {
-        "batch_size": 2,
         "num_workers": 3,
         "prefetch_factor": 3,
         "collate_fn": {
@@ -818,9 +1039,12 @@
         "persistent_workers": true
     },
     "informations": {
-        "fid": 14.75,
-        "fvd": 268.69,
-        "total_batch_sizes": 64,
-        "steps": 5000
+        "fid": 9.46,
+        "fvd": 91.55,
+        "fvd_on_nusc_by_3_ref_frames": 38.83,
+        "fvd_on_nusc_by_1_ref_frames": 45.98,
+        "fvd_on_nusc_without_ref_frame": 117.50,
+        "average_total_batch_sizes": 96,
+        "steps": 40000
     }
 }
