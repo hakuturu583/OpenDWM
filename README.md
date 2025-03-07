@@ -49,12 +49,14 @@ python -m pip install torch==2.5.1 torchvision==0.20.1
 Clone the repository, then install the dependencies.
 
 ```
-cd DWM
+cd OpenDWM
 git submodule update --init --recursive
-python -m pip install requirements.txt -r
+python -m pip install -r requirements.txt
 ```
 
 ## Models
+
+### Video Models
 
 Our cross-view temporal SD (CTSD) pipeline support loading the pretrained SD 2.1, 3.0, 3.5, or the checkpoints we trained on the autonomous driving datasets.
 
@@ -64,6 +66,15 @@ Our cross-view temporal SD (CTSD) pipeline support loading the pretrained SD 2.1
 | [SD 3.0](https://huggingface.co/stabilityai/stable-diffusion-3-medium-diffusers) | | [UniMLVG Config](configs/ctsd/unimlvg/ctsd_unimlvg_stage3_tirda_bm_nwa.json), [Download](http://103.237.29.236:10030/ctsd_unimlvg_tirda_bm_nwa_60k.pth) |
 | [SD 3.5](https://huggingface.co/stabilityai/stable-diffusion-3.5-medium) | [Config](configs/ctsd/multi_datasets/ctsd_35_tirda_nwao.json), [Download](http://103.237.29.236:10030/ctsd_35_tirda_nwao_20k.pth) | [Config](configs/ctsd/multi_datasets/ctsd_35_tirda_bm_nwao.json), [Download](http://103.237.29.236:10030/ctsd_35_tirda_bm_nwao_40k.pth) |
 
+### LiDAR Models
+
+You can download our pre-trained tokenzier and generation model in the following link.
+
+| Model Architecture | Configs | Checkpoint Download |
+| :-: | :-: | :-: |
+| VQVAE | [Config](configs/lidar/lidar_vqvae_nwa.json) | [checkpoint](http://103.237.29.236:10030/lidar_vqvae_nwa_60k.pth), [blank code ](http://103.237.29.236:10030/lidar_vqvae_nwa_60k_blank_code.pkl) |
+| MaskGIT | [Config](configs/lidar/lidar_maskgit_layout_ns.json)| [checkpoint](http://103.237.29.236:10030/lidar_maskgit_nusc_150k.pth) |
+| Temporal MaskGIT |  |  |
 ## Examples
 
 ### T2I, T2V generation with CTSD pipeline
@@ -82,6 +93,17 @@ PYTHONPATH=src python examples/ctsd_generation_example.py -c examples/ctsd_35_6v
 
 ```bash
 PYTHONPATH=src python src/dwm/preview.py -c examples/ctsd_35_6views_video_generation_with_layout.json -o output/ctsd_35_6views_video_generation_with_layout
+```
+
+### Layout conditioned LiDAR generation with MaskGIT pipeline
+
+1. Download LiDAR VQVAE and LiDAR MaskGIT generation model checkpoint.
+2. Prepare the dataset ( [nuscenes_scene-0627_lidar_package.zip](http://103.237.29.236:10030/nuscenes_scene-0627_lidar_package.zip) ).
+3. Modify the values of `json_file`, `vq_point_cloud_ckpt_path`, `vq_blank_code_path` and `model_ckpt_path` to the paths of your dataset and checkpoints in the json file `examples/lidar_maskgit_preview.json` .
+4. Run the following command to visualize the LiDAR of the validation set and save the generated point cloud as `.bin` file.
+
+```bash
+PYTHONPATH=src python src/dwm/preview.py -c examples/lidar_maskgit_preview.json -o output/test
 ```
 
 ## Train
