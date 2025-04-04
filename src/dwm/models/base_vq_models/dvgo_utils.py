@@ -5,13 +5,12 @@ import torch.nn.functional as F
 from torch.utils.cpp_extension import load
 
 parent_dir = os.path.dirname(os.path.abspath(__file__))
+cpp_file = os.path.join(parent_dir, '../../../../externals/dvgo_cuda/lib/cuda/render_utils.cpp')
+cu_file = os.path.join(parent_dir, '../../../../externals/dvgo_cuda/lib/cuda/render_utils_kernel.cu')
 render_utils_cuda = load(
     name='render_utils_cuda',
-    sources=[
-        os.path.join(parent_dir, path)
-        for path in ['../../../../externals/dvgo_cuda/render_utils.cpp', '../../../../externals/dvgo_cuda/render_utils_kernel.cu']],
+    sources=[cpp_file, cu_file],
     verbose=True)
-
 
 def sample_ray(rays_o, rays_d, near, far, stepsize, xyz_min, xyz_max, voxel_size):
     '''Sample query points on rays.
