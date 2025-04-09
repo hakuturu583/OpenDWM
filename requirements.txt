@@ -20,7 +20,7 @@ tqdm
 transformers==4.48.0
 transforms3d
 Ninja
-chamferdist
+// chamferdist
 timm
 rotary-embedding-torch
 opencv-python
