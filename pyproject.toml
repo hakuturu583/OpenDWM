@@ -23,8 +23,10 @@ dependencies = [
     "sentencepiece>=0.2.0",
     "tensorboard>=2.19.0",
     "torch-fidelity>=0.3.0",
-    "torch==2.5.0; sys_platform == 'darwin'",
-    "torch==2.5.0+cu124; sys_platform == 'linux'",
+    "torch==2.5.1; sys_platform == 'darwin'",
+    "torch==2.5.1+cu124; sys_platform == 'linux'",
+    "torchvision==0.20.1+cu124; sys_platform == 'linux'",
+    "torchvision==0.20.1; sys_platform == 'darwin'",
     "torchmetrics==1.6.0",
     "tqdm>=4.67.1",
     "transformers==4.48.0",
@@ -45,4 +47,5 @@ build-backend = "hatchling.build"
 [tool.uv]
 find-links = [
     "https://download.pytorch.org/whl/cu124/torch",
+    "https://download.pytorch.org/whl/cu124/torchvision",
 ]
